@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
-from qie11_phase_scan import commands
+import qie11_phase_scan as qps
 
-for c in commands():
+for s in qps.settings(nCycles=2):
+    print s
+
+for c in qps.commands():
     print c
