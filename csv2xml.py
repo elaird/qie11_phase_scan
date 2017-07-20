@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-def tuples(filename):
+def tuples(filename, ped, default_setting):
     out = []
 
     f = open(filename)
@@ -11,19 +11,26 @@ def tuples(filename):
             continue
         if fields[0] == "iEta":
             continue
-        # iEta,iPhi,Depth,RM,RM fiber,channel number,Mean TDC time[ns],Uncertainty,Adjustment [ns],Adjustment [phase units]
-        ieta, iphi, depth, rm, fi, ch, mean, unc, adjt, adj = fields
+
+        if ped:
+            # iEta,iPhi,Depth,RM,RM fiber,channel,Best DAC setting,Best mean pedestal,Error on best mean pedestal
+            ieta, iphi, depth, rm, fi, ch, dac, ped_mean, ped_unc = fields
+            setting = int(dac)
+        else:
+            # iEta,iPhi,Depth,RM,RM fiber,channel number,Mean TDC time[ns],Uncertainty,Adjustment [ns],Adjustment [phase units]
+            ieta, iphi, depth, rm, fi, ch, mean, unc, adjt, adj = fields
+            setting = default_setting - int(adj)
+
         rm = int(rm)
         fi = int(fi)
         ch = int(ch)
-        setting = default_setting - int(adj)
         qie = 6 * (fi - 1) + ch + 1
         out.append((rm, qie, setting))
     f.close()
     return out
 
 
-def extra():
+def extra(default_setting):
     out = []
 
     # zero-suppressed    
@@ -44,13 +51,16 @@ def extra():
     return out
 
 
-def main(filename):
-    lst = tuples(filename) + extra()
+def main(filename, ped, default_setting):
+    lst = tuples(filename, ped, default_setting) + extra(default_setting)
     lst.sort()
 
     gaps = []
     for i, (rm, qie, setting) in enumerate(lst):
-        print "    <Data qie='%d' rm='%d' elements='1' encoding='dec'>%d</Data>" % (qie, rm, setting)
+        if ped:
+            print "    <Data qie='%d' rm='%d' elements='1' encoding='dec'>%d 0 0 0 0</Data>" % (qie, rm, setting)
+        else:
+            print "    <Data qie='%d' rm='%d' elements='1' encoding='dec'>%d</Data>" % (qie, rm, setting)
         if i:
             rm0, qie0, setting0 = lst[i - 1]
             within_rm = qie - qie0 == 1
@@ -65,5 +75,5 @@ def main(filename):
 
 
 if __name__ == "__main__":
-    default_setting = 78
-    main("HEP17_TDC_timing_corrections.csv")
+    # main("HEP17_TDC_timing_corrections.csv", ped=False, default_setting=78)
+    main("Pedestal_settings_bv60pedscan_298954_ADC36_v3.csv", ped=True, default_setting=38)
