@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 
+import optparse
 
-def tuples(filename, ped, default_setting):
+def tuples(filename, default_setting, ped=False, capid=False):
     out = []
+    if not filename:
+        return out
 
     f = open(filename)
     for line in f:
@@ -13,9 +16,14 @@ def tuples(filename, ped, default_setting):
             continue
 
         if ped:
-            # iEta,iPhi,Depth,RM,RM fiber,channel,Best DAC setting,Best mean pedestal,Error on best mean pedestal
-            ieta, iphi, depth, rm, fi, ch, dac, ped_mean, ped_unc = fields
-            setting = int(dac)
+            if capid:
+                # iEta,iPhi,Depth,CapID,RM,RM fiber,channel,Best DAC setting,Best mean pedestal,Error on best mean pedestal
+                ieta, iphi, depth, capid, rm, fi, ch, dac, ped_mean, ped_unc = fields
+                setting = (int(capid), int(dac))
+            else:
+                # iEta,iPhi,Depth,RM,RM fiber,channel,Best DAC setting,Best mean pedestal,Error on best mean pedestal
+                ieta, iphi, depth, rm, fi, ch, dac, ped_mean, ped_unc = fields
+                setting = int(dac)
         else:
             # iEta,iPhi,Depth,RM,RM fiber,channel number,Mean TDC time[ns],Uncertainty,Adjustment [ns],Adjustment [phase units]
             ieta, iphi, depth, rm, fi, ch, mean, unc, adjt, adj = fields
@@ -51,14 +59,30 @@ def extra(default_setting):
     return out
 
 
-def main(filename, ped, default_setting):
-    lst = tuples(filename, ped, default_setting) + extra(default_setting)
-    lst.sort()
+def main(opts):
+    if opts.ped:
+        lst = tuples(opts.PedestalDAC, default_setting=opts.defaultPedestalDAC, ped=True) + extra(opts.defaultPedestalDAC)
+        lst.sort()
+
+        lst2 = tuples(opts.CapIDpedestal, default_setting=opts.defaultCapIDpedestal, ped=True, capid=True)  # no extra
+        lst2.sort()
+    else:
+        lst = tuples(opts.PhaseDelay, default_setting=opts.defaultPhaseDelay) + extra(opts.defaultPhaseDelay)
+        lst.sort()
 
     gaps = []
     for i, (rm, qie, setting) in enumerate(lst):
-        if ped:
-            print "    <Data qie='%d' rm='%d' elements='1' encoding='dec'>%d 0 0 0 0</Data>" % (qie, rm, setting)
+        if opts.ped:
+            caps = {}
+            for capid in range(4):
+                caps[capid] = opts.defaultCapIDpedestal
+            for (rm2, qie2, (capid, setting2)) in lst2:
+                if rm2 != rm:
+                    continue
+                if qie2 != qie:
+                    continue
+                caps[capid] = setting2
+            print "    <Data qie='%d' rm='%d' elements='1' encoding='dec'>%d %d %d %d %d</Data>" % (qie, rm, setting, caps[0], caps[1], caps[2], caps[3])
         else:
             print "    <Data qie='%d' rm='%d' elements='1' encoding='dec'>%d</Data>" % (qie, rm, setting)
         if i:
@@ -74,6 +98,51 @@ def main(filename, ped, default_setting):
             print gap
 
 
+def options():
+    # from QIE11_spec_2015run_30mar2016.pdf
+
+    parser = optparse.OptionParser(usage="usage: %prog [options] ")
+    parser.add_option("--ped",
+                      dest="ped",
+                      default=False,
+                      action="store_true",
+                      help="Generate pedestal settings (rather than phase delays)")
+    parser.add_option("--default-PhaseDelay",
+                      dest="defaultPhaseDelay",
+                      default=78,
+                      type="int",
+                      metavar="N",
+                      help="")
+    parser.add_option("--PhaseDelay",
+                      dest="PhaseDelay",
+                      default="HEP17_TDC_timing_corrections.csv",
+                      metavar="foo.csv",
+                      help="")
+    parser.add_option("--default-pedestalDAC",
+                      dest="defaultPedestalDAC",
+                      default=38,
+                      type="int",
+                      metavar="N",
+                      help="")
+    parser.add_option("--PedestalDAC",
+                      dest="PedestalDAC",
+                      default="Pedestal_settings_bv60pedscan_298954_ADC36_v3.csv",
+                      metavar="foo.csv",
+                      help="")
+    parser.add_option("--default-CapIDpedestal",
+                      dest="defaultCapIDpedestal",
+                      default=0,
+                      type="int",
+                      metavar="N",
+                      help="")
+    parser.add_option("--CapIDpedestal",
+                      dest="CapIDpedestal",
+                      default="pedestal_settings_capidscan_299456_ADC9.csv",
+                      metavar="foo.csv",
+                      help="")
+    opts, args = parser.parse_args()
+    return opts
+
+
 if __name__ == "__main__":
-    # main("HEP17_TDC_timing_corrections.csv", ped=False, default_setting=78)
-    main("Pedestal_settings_bv60pedscan_298954_ADC36_v3.csv", ped=True, default_setting=38)
+    main(options())
