@@ -137,7 +137,7 @@ def options():
                       help="")
     parser.add_option("--CapIDpedestal",
                       dest="CapIDpedestal",
-                      default="pedestal_settings_capidscan_299456_ADC9.csv",
+                      default="pedestal_settings_capidscan_299456_ADC9_v2_left.csv",
                       metavar="foo.csv",
                       help="")
     opts, args = parser.parse_args()
