@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import time
-import fec_jm, qie11_phase_scan, umnio
+import fec_jm, qie11_phases, umnio
 
 ##############################################
 ############### SCAN SETTINGS ################
@@ -15,8 +15,8 @@ igloo = True  # write phases not only to QIEs but also to igloos
 
 
 def setPhase(phase):
-        cmds1 = qie11_phase_scan.commands(phase, put=True, igloo=igloo)
-        cmds2 = qie11_phase_scan.commands(phase, put=False, igloo=igloo)
+        cmds1 = qie11_phases.commands(phase, put=True, igloo=igloo)
+        cmds2 = qie11_phases.commands(phase, put=False, igloo=igloo)
 
         if test_mode:
                 logfile.write("Test mode enabled. The following commands would be sent to the ngccm server otherwise:\n")        
@@ -30,7 +30,7 @@ def setPhase(phase):
 logfile = open(logfile_name, "a")
 
 while (loop != 0):
-        for phase in qie11_phase_scan.settings():
+        for phase in qie11_phases.settings():
                 print "Writing phase " + str(transition_code) + " to uMNIO."
                 if not test_mode:
                         umnio.write_setting(transition_code)
