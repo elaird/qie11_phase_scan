@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 
-import os, time
+import time
 import fec_jm, qie11_phase_scan, umnio
 
 ##############################################
 ############### SCAN SETTINGS ################
 ##############################################
 logfile_name = "phasescan_log.txt" # note, log file is APPENDED, not overwritten
-transition_code = 999 # wrtitten to uMNIO during phase changes
-seconds_per_phase = 300
-loop = 100 # number of loops. loop = -1 for permanent looping
+transition_code = 999  # wrtitten to uMNIO during phase changes
+seconds_per_phase = 10
+loop = 100  # number of loops. loop = -1 for permanent looping
 test_mode = False  # if test_mode == True, then there are no actual writes to hardware
+igloo = True  # write phases not only to QIEs but also to igloos
 
 
-def setPhase(phase, igloo=True):
-	logfile = open(logfile_name,"a")
+def setPhase(phase):
         cmds1 = qie11_phase_scan.commands(phase, put=True, igloo=igloo)
         cmds2 = qie11_phase_scan.commands(phase, put=False, igloo=igloo)
 
@@ -26,9 +26,8 @@ def setPhase(phase, igloo=True):
                 fec_jm.sendAndLog(cmds1, logfile)
                 fec_jm.sendAndLog(cmds2, logfile)
         logfile.write("############################################\n")
-	logfile.close()
 
-os.system("touch " + logfile_name)
+logfile = open(logfile_name, "a")
 
 while (loop != 0):
         for phase in qie11_phase_scan.settings():
@@ -49,6 +48,7 @@ while (loop != 0):
                 print "####################################################################################"
 
                 loop =  loop - 1
+logfile.close()
 
 print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 print
