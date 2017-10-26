@@ -109,3 +109,6 @@ def logResponse(responses,logfile):
                 print logline
                 logfile.write(logline + "\n")
 
+
+def sendAndLog(cmds, logfile):
+        logResponse(sendngFECcommands(cmds), logfile)
