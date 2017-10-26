@@ -6,13 +6,12 @@ from re import search, escape
 ################################################
 ############### SERVER SETTINGS ################
 ################################################
+ngfec = "/nfshome0/hcalpro/ngFEC/ngFEC.exe"
 host = "hcalngccm02"
 port = 64000
 
 def sendngFECcommands(cmds=['quit']):
         # HARDCODE FOR HE PHASE SCAN
-        # host = "hcalngccm02"
-        # port = 64000
         script = False
         raw = False
 
@@ -43,7 +42,7 @@ def sendngFECcommands(cmds=['quit']):
 				out.write(cmds_str)
 		
 		# Prepare the ngfec arguments:
-		ngfec_cmd = 'ngFEC.exe -z -c -p {0}'.format(port)
+		ngfec_cmd = '{0} -z -c -p {1}'.format(ngfec, port)
 		if host != None:
 			ngfec_cmd += " -H {0}".format(host)
 		
