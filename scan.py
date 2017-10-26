@@ -1,23 +1,13 @@
 #!/usr/bin/env python
 
-import time
-import fec_jm, qie11_phases, umnio
-
 # Original author: J. Mariano #
 # Refactored Oct. 2017 #
 
-##############################################
-############### SCAN SETTINGS ################
-##############################################
-logfile_name = "phasescan_log.txt" # note, log file is APPENDED, not overwritten
-transition_code = 999  # wrtitten to uMNIO during phase changes
-seconds_per_phase = 10
-loop = 100  # number of loops. loop = -1 for permanent looping
-test_mode = False  # if test_mode == True, then there are no actual writes to hardware
-igloo = True  # write phases not only to QIEs but also to igloos
+import time
+import fec_jm, qie11_phases, umnio
 
 
-def setPhase(phase):
+def setPhase(phase, test_mode=None, igloo=None, logfile=None):
         cmds1 = qie11_phases.commands(phase, put=True, igloo=igloo)
         cmds2 = qie11_phases.commands(phase, put=False, igloo=igloo)
 
@@ -30,18 +20,24 @@ def setPhase(phase):
                 fec_jm.sendAndLog(cmds2, logfile)
         logfile.write("############################################\n")
 
-logfile = open(logfile_name, "a")
 
-while (loop != 0):
+def main():
+    transition_code = 999  # wrtitten to uMNIO during phase changes
+    seconds_per_phase = 300
+    loop = 100  # number of loops. loop = -1 for permanent looping
+    test_mode = False  # if test_mode == True, then there are no actual writes to hardware
+
+    while (loop != 0):
         for phase in qie11_phases.settings():
-                print "Writing phase " + str(transition_code) + " to uMNIO."
+                logfile = open("phasescan_log.txt", "a")
+                print "Writing phase %d to uMNIO." % transition_code
                 if not test_mode:
                         umnio.write_setting(transition_code)
                 
-                print "Setting phase: " + str(phase)
-                setPhase(phase)
+                print "Setting phase: %d" % phase
+                setPhase(phase, test_mode=test_mode, igloo=False, logfile=logfile)
                 
-                print "Writing phase " + str(phase) + " to uMNIO."
+                print "Writing phase %d to uMNIO." % phase
                 if not test_mode:
                         umnio.write_setting(phase)
                 
@@ -51,11 +47,17 @@ while (loop != 0):
                 print "####################################################################################"
 
                 loop =  loop - 1
-logfile.close()
+                logfile.close()
 
-print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-print
-print "Phases are still in the final scan value."
-print "Configure a run to restore to default values."
-print
-print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+
+    print
+    print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    print "Phases are still in the final scan value."
+    print "Configure a run to restore to default values."
+    print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
