@@ -42,14 +42,19 @@ def settings(nCycles=1, debug=False):
     return out
 
 
-def commands(rbx="HEP17", rms="[1-4]", qies="[1-48]", mult=192):
+def commands(setting, rbx="HEP17", rms="[1-4]", qies="[1-48]", mult=192, put=False, igloo=False):
     stem = "%s-%s" % (rbx, rms)
     out = []
-    for setting in settings(nCycles=2):
-        t = (stem, qies, mult, setting)
-        out.append("; ".join(["put %s-QIE%s_PhaseDelay %d*%d" % t,
-                              "put %s-Qie%s_ck_ph %d*%d" % t
-                              ]))
+
+    if put:
+        out.append("put %s-QIE%s_PhaseDelay %d*%d" % (stem, qies, mult, setting))
+        if igloo:
+            out.append("put %s-Qie%s_ck_ph %d*%d" % (stem, qies, mult, setting))
+    else:
+        out.append("get %s-QIE%s_PhaseDelay_rr" % (stem, qies))
+        if igloo:
+            out.append("get %s-Qie%s_ck_ph_rr" % (stem, qies))
+
     return out
 
 
@@ -61,8 +66,9 @@ def test():
     t = times()
     assert sorted(t) == range(min(t), 1 + max(t))
 
-    settings(debug=True)
-    print "\n".join(commands())
+    for s in settings(debug=True):
+        print commands(s, put=True)
+        print commands(s, put=False)
 
     
 if __name__ == "__main__":
