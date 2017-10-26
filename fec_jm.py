@@ -3,6 +3,8 @@ from datetime import datetime
 from time import time,sleep
 from re import search, escape
 
+# Author: J. Mariano, 2017 #
+
 ################################################
 ############### SERVER SETTINGS ################
 ################################################
