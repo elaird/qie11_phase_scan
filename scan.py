@@ -22,7 +22,7 @@ def setPhase(phase, test_mode=None, igloo=None, logfile=None):
 
 
 def main():
-    transition_code = 999  # wrtitten to uMNIO during phase changes
+    transition_code = 999  # written to uMNIO during phase changes
     seconds_per_phase = 300
     loop = 100  # number of loops. loop = -1 for permanent looping
     test_mode = False  # if test_mode == True, then there are no actual writes to hardware
