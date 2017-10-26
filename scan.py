@@ -3,6 +3,9 @@
 import time
 import fec_jm, qie11_phases, umnio
 
+# Original author: J. Mariano #
+# Refactored Oct. 2017 #
+
 ##############################################
 ############### SCAN SETTINGS ################
 ##############################################
