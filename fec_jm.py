@@ -64,7 +64,7 @@ def sendngFECcommands(cmds=['quit']):
                                                 p.expect("{0}\s?#((\s|E)[^\r^\n^#]*)".format(escape(c)))
                                         except pexpect.EOF:
                                                 print "Caught problem with", c
-                                                continue
+                                                return []
 					t1 = time()
 #					print [p.match.group(0)]
 					output.append({
