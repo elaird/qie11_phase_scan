@@ -44,7 +44,7 @@ def sendngFECcommands(cmds=['quit']):
 				out.write(cmds_str)
 		
 		# Prepare the ngfec arguments:
-		ngfec_cmd = '{0} -z -c -p {1}'.format(ngfec, port)
+		ngfec_cmd = '{0} -z -t -c -p {1}'.format(ngfec, port)
 		if host != None:
 			ngfec_cmd += " -H {0}".format(host)
 		
@@ -60,7 +60,11 @@ def sendngFECcommands(cmds=['quit']):
 				p.sendline(c)
 				if c != "quit":
 					t0 = time()
-					p.expect("{0}\s?#((\s|E)[^\r^\n^#]*)".format(escape(c)))
+                                        try:
+                                                p.expect("{0}\s?#((\s|E)[^\r^\n^#]*)".format(escape(c)))
+                                        except pexpect.EOF:
+                                                print "Caught problem with", c
+                                                continue
 					t1 = time()
 #					print [p.match.group(0)]
 					output.append({
