@@ -42,19 +42,15 @@ def settings(nCycles=1, debug=False):
     return out
 
 
-def commands(setting, rbx="HEP17", rms="[1-4]", qies="[1-48]", mult=192, put=False, igloo=False):
-    stem = "%s-%s" % (rbx, rms)
+def commands(setting, rms="[1-4]", qies="[1-48]", put=False):
     out = []
-
-    if put:
-        out.append("put %s-QIE%s_PhaseDelay %d*%d" % (stem, qies, mult, setting))
-        if igloo:
-            out.append("put %s-Qie%s_ck_ph %d*%d" % (stem, qies, mult, setting))
-    else:
-        out.append("get %s-QIE%s_PhaseDelay_rr" % (stem, qies))
-        if igloo:
-            out.append("get %s-Qie%s_ck_ph_rr" % (stem, qies))
-
+    for end in "MP":
+        stem = "HE%s[01-18]-%s" % (end, rms)
+        if put:
+            mult = 4 * 48 * 18
+            out.append("put %s-QIE%s_PhaseDelay %d*%d" % (stem, qies, mult, setting))
+        else:
+            out.append("get %s-QIE%s_PhaseDelay_rr" % (stem, qies))
     return out
 
 
