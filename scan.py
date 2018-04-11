@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 # Original author: J. Mariano #
 # Refactored Oct. 2017 #
@@ -7,18 +7,18 @@ import time
 import fec_jm, qie11_phases, umnio
 
 
-def setPhase(phase, test_mode=None, igloo=None, logfile=None):
-        cmds1 = qie11_phases.commands(phase, put=True, igloo=igloo)
-        cmds2 = qie11_phases.commands(phase, put=False, igloo=igloo)
+def setPhase(phase, test_mode=None, logfile=None):
+    cmds1 = qie11_phases.commands(phase, put=True)
+    cmds2 = qie11_phases.commands(phase, put=False)
 
-        if test_mode:
-                logfile.write("Test mode enabled. The following commands would be sent to the ngccm server otherwise:\n")        
-                for cmd in cmds1 + cmds2:
-                        logfile.write(cmd)
-        else:
-                fec_jm.sendAndLog(cmds1, logfile)
-                fec_jm.sendAndLog(cmds2, logfile)
-        logfile.write("############################################\n")
+    if test_mode:
+        logfile.write("Test mode enabled. The following commands would be sent to the ngccm server otherwise:\n")
+        for cmd in cmds1 + cmds2:
+            logfile.write(cmd + "\n")
+    else:
+        fec_jm.sendAndLog(cmds1, logfile)
+        fec_jm.sendAndLog(cmds2, logfile)
+    logfile.write("############################################\n")
 
 
 def main():
@@ -29,25 +29,25 @@ def main():
 
     while (loop != 0):
         for phase in qie11_phases.settings():
-                logfile = open("phasescan_log.txt", "a")
-                print "Writing phase %d to uMNIO." % transition_code
-                if not test_mode:
-                        umnio.write_setting(transition_code)
-                
-                print "Setting phase: %d" % phase
-                setPhase(phase, test_mode=test_mode, igloo=False, logfile=logfile)
-                
-                print "Writing phase %d to uMNIO." % phase
-                if not test_mode:
-                        umnio.write_setting(phase)
-                
-                print "...sleeping"
-                time.sleep(seconds_per_phase)
-                
-                print "####################################################################################"
+            logfile = open("phasescan_log.txt", "a")
+            print "Writing phase %d to uMNIO." % transition_code
+            if not test_mode:
+                umnio.write_setting(transition_code)
 
-                loop =  loop - 1
-                logfile.close()
+            print "Setting phase: %d" % phase
+            setPhase(phase, test_mode=test_mode, logfile=logfile)
+
+            print "Writing phase %d to uMNIO." % phase
+            if not test_mode:
+                umnio.write_setting(phase)
+
+            print "...sleeping"
+            time.sleep(seconds_per_phase)
+
+            print "####################################################################################"
+
+            loop =  loop - 1
+            logfile.close()
 
 
 if __name__ == "__main__":
