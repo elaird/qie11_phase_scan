@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 
-def times(delta=7, tMax=14, t0=7, period=25):
+def times(delta=7, tMax=-1, t0=-12, period=25):
     assert delta < period
     assert tMax < period
 
