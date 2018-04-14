@@ -24,10 +24,10 @@ def setPhase(phase, test_mode=None, logfile=None):
 def main():
     transition_code = 999  # written to uMNIO during phase changes
     seconds_per_phase = 300
-    loop = 100  # number of loops. loop = -1 for permanent looping
+    nCycles = 20  # number of scan cycles (a negative number will cause permanent looping)
     test_mode = False  # if test_mode == True, then there are no actual writes to hardware
 
-    while (loop != 0):
+    while nCycles:
         for phase in qie11_phases.settings():
             logfile = open("phasescan_log.txt", "a")
             print "Writing phase %d to uMNIO." % transition_code
@@ -46,8 +46,8 @@ def main():
 
             print "####################################################################################"
 
-            loop =  loop - 1
             logfile.close()
+        nCycles -= 1
 
 
 if __name__ == "__main__":
