@@ -55,11 +55,10 @@ def walk(tree, deltas, special, tag, bulk=None, settings=None):
                 rm = int(value.attrib["rm"])
                 qie = int(value.attrib["qie"])
                 special_channel = (rm, qie) in special
-                oldPhase = int(value.text)
-
                 adjustment = deltas.get((rbx, rm, qie))
+
                 if adjustment is not None:
-                    newPhase = adjusted(oldPhase, adjustment)
+                    newPhase = adjusted(int(value.text), adjustment)
                     if bulk:
                         value.text = str(newPhase)
                         if not special_channel:
