@@ -1,12 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+# modeled after https://github.com/dnoonan08/hcalScripts/blob/master/makePhaseDelayTuningXML.py
 
-import optparse
+import collections, datetime, optparse
+from xml.etree import ElementTree
 
-def tuples(filename, default_setting, ped=False, capid=False):
-    out = []
-    if not filename:
-        return out
 
+def adjustments(filename):
+    out = {}
     f = open(filename)
     for line in f:
         fields = line.strip().split(",")
@@ -15,129 +15,111 @@ def tuples(filename, default_setting, ped=False, capid=False):
         if fields[0] == "iEta":
             continue
 
-        if ped:
-            if capid:
-                # iEta,iPhi,Depth,CapID,RM,RM fiber,channel,Best DAC setting,Best mean pedestal,Error on best mean pedestal
-                ieta, iphi, depth, capid, rm, fi, ch, dac, ped_mean, ped_unc = fields
-                setting = (int(capid), int(dac))
-            else:
-                # iEta,iPhi,Depth,RM,RM fiber,channel,Best DAC setting,Best mean pedestal,Error on best mean pedestal
-                ieta, iphi, depth, rm, fi, ch, dac, ped_mean, ped_unc = fields
-                setting = int(dac)
-        else:
-            # iEta,iPhi,Depth,RM,RM fiber,channel number,Mean TDC time[ns],Uncertainty,Adjustment [ns],Adjustment [phase units]
-            ieta, iphi, depth, rm, fi, ch, mean, unc, adjt, adj = fields
-            setting = default_setting - int(adj)
+        # iEta,iPhi,Depth,RM,RM fiber,channel number,Mean TDC time[ns],Uncertainty,Adjustment [ns],Adjustment [phase units]
+        ieta, iphi, depth, rm, fi, ch, mean, unc, adjt, adj = fields
 
         rm = int(rm)
         fi = int(fi)
         ch = int(ch)
         qie = 6 * (fi - 1) + ch + 1
-        out.append((rm, qie, setting))
+
+        rbx = "HEP17"
+        out[(rbx, rm, qie)] = int(adj)
     f.close()
     return out
 
 
-def extra(default_setting):
-    out = []
+def adjusted(oldPhase, adjustment):
+    newPhase = oldPhase - adjustment
 
-    # zero-suppressed    
-    for (rm, qie) in [(1, 35),
-                      (2, 19),
-                      (2, 30),
-                      (2, 38),
-                      (3,  8),
-                      (3, 19),
-                      (3, 35),
-                      (4, 19),
-                      ]:
-        out.append((rm, qie, default_setting))
+    # FIXME: handle additional cases
+    if newPhase < 64 and newPhase > 49:
+        if adjustment < 0:
+            newPhase += 14
+        if adjustment > 0:
+            newPhase -= 14
+    return newPhase
 
-    # CU
-    for qie in range(1, 13):
-        out.append((5, qie, default_setting))
+
+def walk(tree, deltas, special, tag, bulk=None, settings=None):
+    for block in tree.getroot():
+        rbx = ''
+        for value in block:
+            if value.tag == "Parameter":
+                if value.attrib["name"] == "RBX":
+                    rbx = value.text
+                if value.attrib["name"] == "CREATIONTAG":
+                    value.text = tag
+
+            if value.tag == "Data":
+                rm = int(value.attrib["rm"])
+                qie = int(value.attrib["qie"])
+                special_channel = (rm, qie) in special
+                oldPhase = int(value.text)
+
+                adjustment = deltas.get((rbx, rm, qie))
+                if adjustment is not None:
+                    newPhase = adjusted(oldPhase, adjustment)
+                    if bulk:
+                        value.text = str(newPhase)
+                        if not special_channel:
+                            settings[rbx].append(newPhase)
+                elif special_channel and (not bulk):
+                    median = settings.get(rbx)
+                    if median is not None:
+                        value.text = str(median)
+
+
+def report_medians(bulk_settings):
+    header = "  RBX    n min med max"
+    print header
+    print "-" * len(header)
+
+    out = {}
+    for rbx, lst in sorted(bulk_settings.iteritems()):
+        l2 = sorted(lst)
+        n = len(l2)
+        if n:
+            med = l2[n / 2]
+            print "%5s  %3d %3d %3d %3d" % (rbx, n, l2[0], med, l2[n - 1])
+            out[rbx] = med
+        else:
+            print "%5s  %3d" % (rbx, n)
     return out
 
 
+def make_new_file(oldXml, deltas, special, tag):
+    tree = ElementTree.parse(oldXml)
+    bulk_settings = collections.defaultdict(list)
+    walk(tree, deltas, special, tag, bulk=True, settings=bulk_settings)
+    medians = report_medians(bulk_settings)
+    walk(tree, deltas, special, tag, bulk=False, settings=medians)
+    tree.write("phaseDelay_%s.xml" % tag)
+
+
 def main(opts):
-    if opts.ped:
-        lst = tuples(opts.PedestalDAC, default_setting=opts.defaultPedestalDAC, ped=True) + extra(opts.defaultPedestalDAC)
-        lst.sort()
+    tag = "HE_" + datetime.date.today().strftime("%Y-%m-%d")
+    deltas = adjustments(opts.phaseDelay)
 
-        lst2 = tuples(opts.CapIDpedestal, default_setting=opts.defaultCapIDpedestal, ped=True, capid=True)  # no extra
-        lst2.sort()
-    else:
-        lst = tuples(opts.PhaseDelay, default_setting=opts.defaultPhaseDelay) + extra(opts.defaultPhaseDelay)
-        lst.sort()
+    special = [(1, 35), (2, 19), (2, 30), (2, 38), (3, 8), (3, 19), (3, 35), (4, 19)]
+    for iQie in range(1, 13):
+        special.append((5, iQie))
 
-    gaps = []
-    for i, (rm, qie, setting) in enumerate(lst):
-        if opts.ped:
-            caps = {}
-            for capid in range(4):
-                caps[capid] = opts.defaultCapIDpedestal
-            for (rm2, qie2, (capid, setting2)) in lst2:
-                if rm2 != rm:
-                    continue
-                if qie2 != qie:
-                    continue
-                caps[capid] = setting2
-            print "    <Data qie='%d' rm='%d' elements='1' encoding='dec'>%d %d %d %d %d</Data>" % (qie, rm, setting, caps[0], caps[1], caps[2], caps[3])
-        else:
-            print "    <Data qie='%d' rm='%d' elements='1' encoding='dec'>%d</Data>" % (qie, rm, setting)
-        if i:
-            rm0, qie0, setting0 = lst[i - 1]
-            within_rm = qie - qie0 == 1
-            new_rm = qie == 1 and qie0 == 48 and (rm - rm0) == 1
-            if not any([within_rm, new_rm]):
-                gaps.append("prev: %d %d  ,  this: %d %d" % (rm0, qie0, rm, qie))
-
-    if gaps:
-        print "\n\nFound these gaps:"
-        for gap in gaps:
-            print gap
+    make_new_file(opts.oldXml, deltas, special, tag)
 
 
 def options():
     # from QIE11_spec_2015run_30mar2016.pdf
 
     parser = optparse.OptionParser(usage="usage: %prog [options] ")
-    parser.add_option("--ped",
-                      dest="ped",
-                      default=False,
-                      action="store_true",
-                      help="Generate pedestal settings (rather than phase delays)")
-    parser.add_option("--default-PhaseDelay",
-                      dest="defaultPhaseDelay",
-                      default=78,
-                      type="int",
-                      metavar="N",
+    parser.add_option("--old-xml",
+                      dest="oldXml",
+                      default="he_delay_2018_v2.xml",
+                      metavar="foo.xml",
                       help="")
-    parser.add_option("--PhaseDelay",
-                      dest="PhaseDelay",
+    parser.add_option("--phase-delay",
+                      dest="phaseDelay",
                       default="HEP17_TDC_timing_corrections.csv",
-                      metavar="foo.csv",
-                      help="")
-    parser.add_option("--default-pedestalDAC",
-                      dest="defaultPedestalDAC",
-                      default=38,
-                      type="int",
-                      metavar="N",
-                      help="")
-    parser.add_option("--PedestalDAC",
-                      dest="PedestalDAC",
-                      default="Pedestal_settings_bv60pedscan_298954_ADC36_v3.csv",
-                      metavar="foo.csv",
-                      help="")
-    parser.add_option("--default-CapIDpedestal",
-                      dest="defaultCapIDpedestal",
-                      default=0,
-                      type="int",
-                      metavar="N",
-                      help="")
-    parser.add_option("--CapIDpedestal",
-                      dest="CapIDpedestal",
-                      default="pedestal_settings_capidscan_299456_ADC9_v2_left.csv",
                       metavar="foo.csv",
                       help="")
     opts, args = parser.parse_args()
