@@ -75,7 +75,7 @@ def adjusted(oldPhase, adjustment, offset):
     return newPhase
 
 
-def walk(tree, deltas, special, tag, bulk=None, settings=None, offset=None):
+def walk(tree, deltas, special, date, tag, bulk=None, settings=None, offset=None):
     for block in tree.getroot():
         rbx = ''
         for value in block:
@@ -83,7 +83,7 @@ def walk(tree, deltas, special, tag, bulk=None, settings=None, offset=None):
                 if value.attrib["name"] == "RBX":
                     rbx = value.text
                 if value.attrib["name"] == "CREATIONSTAMP":
-                    value.text = tag.split("_")[-1]
+                    value.text = date
                 if value.attrib["name"] == "CREATIONTAG":
                     value.text = tag
 
@@ -123,24 +123,26 @@ def report_medians(bulk_settings):
     return out
 
 
-def make_new_file(oldXml, deltas, offset, special, tag):
-    tree = ElementTree.parse(oldXml)
-    bulk_settings = collections.defaultdict(list)
-    walk(tree, deltas, special, tag, bulk=True, settings=bulk_settings, offset=offset)
-    medians = report_medians(bulk_settings)
-    walk(tree, deltas, special, tag, bulk=False, settings=medians)
-    tree.write("%s.xml" % tag)
 
-
-def main(opts):
-    tag = "phaseTuning_HE_" + datetime.date.today().strftime("%Y-%m-%d") + "_v2"
-    deltas = adjustments(opts.phaseDelay)
-
+def special_channels():
     special = [(1, 35), (2, 19), (2, 30), (2, 38), (3, 8), (3, 19), (3, 35), (4, 19)]
     for iQie in range(1, 13):
         special.append((5, iQie))
+    return special
 
-    make_new_file(opts.oldXml, deltas, opts.offset, special, tag)
+
+def main(opts):
+    deltas = adjustments(opts.phaseDelay)
+    special = special_channels()
+    date = datetime.date.today().strftime("%Y-%m-%d")
+    tag = "%s_%s_v%d" % (opts.tag, date, opts.version)
+
+    tree = ElementTree.parse(opts.oldXml)
+    bulk_settings = collections.defaultdict(list)
+    walk(tree, deltas, special, date, tag, bulk=True, settings=bulk_settings, offset=opts.offset)
+    medians = report_medians(bulk_settings)
+    walk(tree, deltas, special, date, tag, bulk=False, settings=medians)
+    tree.write("%s.xml" % tag)
 
 
 def options():
@@ -162,6 +164,15 @@ def options():
                       default=-64,
                       type="int",
                       help="add this offset to all settings")
+    parser.add_option("--tag",
+                      dest="tag",
+                      default="phaseTuning_HE",
+                      help="tag (default is phaseTuning_HE_DATE_VERSION)")
+    parser.add_option("--version",
+                      dest="version",
+                      default=2,
+                      type="int",
+                      help="version number")
     opts, args = parser.parse_args()
     return opts
 
