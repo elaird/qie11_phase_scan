@@ -56,8 +56,8 @@ def adjustments(filename):
     return out
 
 
-def adjusted(oldPhase, adjustment):
-    newPhase = oldPhase - adjustment - 64
+def adjusted(oldPhase, adjustment, offset):
+    newPhase = oldPhase - adjustment + offset
 
     if newPhase < 0:
         print "clipping newPhase from %d to 0" % newPhase
@@ -75,7 +75,7 @@ def adjusted(oldPhase, adjustment):
     return newPhase
 
 
-def walk(tree, deltas, special, tag, bulk=None, settings=None):
+def walk(tree, deltas, special, tag, bulk=None, settings=None, offset=None):
     for block in tree.getroot():
         rbx = ''
         for value in block:
@@ -94,7 +94,7 @@ def walk(tree, deltas, special, tag, bulk=None, settings=None):
                 adjustment = deltas.get((rbx, rm, qie))
 
                 if bulk and adjustment is not None:
-                    newPhase = adjusted(int(value.text), adjustment)
+                    newPhase = adjusted(int(value.text), adjustment, offset)
                     value.text = str(newPhase)
                     if not special_channel:
                         settings[rbx].append(newPhase)
@@ -123,10 +123,10 @@ def report_medians(bulk_settings):
     return out
 
 
-def make_new_file(oldXml, deltas, special, tag):
+def make_new_file(oldXml, deltas, offset, special, tag):
     tree = ElementTree.parse(oldXml)
     bulk_settings = collections.defaultdict(list)
-    walk(tree, deltas, special, tag, bulk=True, settings=bulk_settings)
+    walk(tree, deltas, special, tag, bulk=True, settings=bulk_settings, offset=offset)
     medians = report_medians(bulk_settings)
     walk(tree, deltas, special, tag, bulk=False, settings=medians)
     tree.write("%s.xml" % tag)
@@ -140,7 +140,7 @@ def main(opts):
     for iQie in range(1, 13):
         special.append((5, iQie))
 
-    make_new_file(opts.oldXml, deltas, special, tag)
+    make_new_file(opts.oldXml, deltas, opts.offset, special, tag)
 
 
 def options():
@@ -151,12 +151,17 @@ def options():
                       dest="oldXml",
                       default="he_delay_2018_v2.xml",
                       metavar="foo.xml",
-                      help="")
+                      help="file containing old delay settings")
     parser.add_option("--phase-delay",
                       dest="phaseDelay",
                       default="heller_HE_tuning_proposal_Apr24.csv",
                       metavar="foo.csv",
-                      help="")
+                      help="file specifying time adjustments")
+    parser.add_option("--offset",
+                      dest="offset",
+                      default=-64,
+                      type="int",
+                      help="add this offset to all settings")
     opts, args = parser.parse_args()
     return opts
 
