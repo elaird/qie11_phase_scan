@@ -5,39 +5,73 @@ import collections, datetime, optparse
 from xml.etree import ElementTree
 
 
+def det2fe(filenames=["2018HCALLMap_ngHE_K_20180214.txt"], nExpected=26,
+           iSide=0, iEta=1, iPhi=2, iDepth=4, iDet=5, iRbx=6, iRm=11, iRmFib=12, iRmFibCh=13):
+    out = {}
+    for filename in filenames:
+        iLine = 0
+        f = open(filename)
+        for line in f:
+            iLine += 1
+            if not line:
+                continue
+            fields = line.split()
+            if fields[0].startswith("#") or fields[0] == "side":
+                continue
+
+            if len(fields) != nExpected and nExpected is not None:
+                print len(fields), fields
+                continue
+
+            if fields[iDet] != "HE":
+                continue
+
+            key = (int(fields[iSide]) * int(fields[iEta]), int(fields[iPhi]), int(fields[iDepth]))
+            value = (fields[iRbx], int(fields[iRm]), int(fields[iRmFib]), int(fields[iRmFibCh]))
+            if key in out:
+                print "WARNING: found duplicate (line %d):" % iLine, key, value, out[key]
+            else:
+                out[key] = value
+        f.close()
+    return out
+
+
 def adjustments(filename):
+    conversion = det2fe()
     out = {}
     f = open(filename)
     for line in f:
         fields = line.strip().split(",")
         if not fields:
             continue
-        if fields[0] == "iEta":
+        if fields[0] == "nDigis":
             continue
 
-        # iEta,iPhi,Depth,RM,RM fiber,channel number,Mean TDC time[ns],Uncertainty,Adjustment [ns],Adjustment [phase units]
-        ieta, iphi, depth, rm, fi, ch, mean, unc, adjt, adj = fields
-
-        rm = int(rm)
-        fi = int(fi)
-        ch = int(ch)
+        # nDigis,iEta,iPhi,Depth,Mean TDC time[ns], TDC time RMS[ns], Uncertainty,Adjustment[ns],Adjustment[phase units]
+        n, ieta, iphi, depth, mean, rms, unc, adjt, adj = fields
+        rbx, rm, fi, ch = conversion[(int(ieta), int(iphi), int(depth))]
         qie = 6 * (fi - 1) + ch + 1
-
-        rbx = "HEP17"
         out[(rbx, rm, qie)] = int(adj)
     f.close()
     return out
 
 
 def adjusted(oldPhase, adjustment):
-    newPhase = oldPhase - adjustment
+    newPhase = oldPhase - adjustment - 64
 
-    # FIXME: handle additional cases
-    if newPhase < 64 and newPhase > 49:
+    if newPhase < 0:
+        print "clipping newPhase from %d to 0" % newPhase
+        newPhase = 0
+
+    if 49 < newPhase < 64:
         if adjustment < 0:
             newPhase += 14
         if adjustment > 0:
             newPhase -= 14
+
+    if 113 < newPhase:
+        print "clipping newPhase from %d to 113" % newPhase
+        newPhase = 113
     return newPhase
 
 
@@ -48,6 +82,8 @@ def walk(tree, deltas, special, tag, bulk=None, settings=None):
             if value.tag == "Parameter":
                 if value.attrib["name"] == "RBX":
                     rbx = value.text
+                if value.attrib["name"] == "CREATIONSTAMP":
+                    value.text = tag.split("_")[-1]
                 if value.attrib["name"] == "CREATIONTAG":
                     value.text = tag
 
@@ -57,13 +93,13 @@ def walk(tree, deltas, special, tag, bulk=None, settings=None):
                 special_channel = (rm, qie) in special
                 adjustment = deltas.get((rbx, rm, qie))
 
-                if adjustment is not None:
+                if bulk and adjustment is not None:
                     newPhase = adjusted(int(value.text), adjustment)
-                    if bulk:
-                        value.text = str(newPhase)
-                        if not special_channel:
-                            settings[rbx].append(newPhase)
-                elif special_channel and (not bulk):
+                    value.text = str(newPhase)
+                    if not special_channel:
+                        settings[rbx].append(newPhase)
+
+                if (not bulk) and special_channel:
                     median = settings.get(rbx)
                     if median is not None:
                         value.text = str(median)
@@ -93,11 +129,11 @@ def make_new_file(oldXml, deltas, special, tag):
     walk(tree, deltas, special, tag, bulk=True, settings=bulk_settings)
     medians = report_medians(bulk_settings)
     walk(tree, deltas, special, tag, bulk=False, settings=medians)
-    tree.write("phaseDelay_%s.xml" % tag)
+    tree.write("%s.xml" % tag)
 
 
 def main(opts):
-    tag = "HE_" + datetime.date.today().strftime("%Y-%m-%d")
+    tag = "phaseTuning_HE_" + datetime.date.today().strftime("%Y-%m-%d") + "_v2"
     deltas = adjustments(opts.phaseDelay)
 
     special = [(1, 35), (2, 19), (2, 30), (2, 38), (3, 8), (3, 19), (3, 35), (4, 19)]
@@ -118,7 +154,7 @@ def options():
                       help="")
     parser.add_option("--phase-delay",
                       dest="phaseDelay",
-                      default="HEP17_TDC_timing_corrections.csv",
+                      default="heller_HE_tuning_proposal_Apr24.csv",
                       metavar="foo.csv",
                       help="")
     opts, args = parser.parse_args()
