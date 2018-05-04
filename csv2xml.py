@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # modeled after https://github.com/dnoonan08/hcalScripts/blob/master/makePhaseDelayTuningXML.py
 
-import collections, datetime, optparse
+import collections, datetime, optparse, sys
 from xml.etree import ElementTree
 
 
@@ -47,8 +47,10 @@ def adjustments(filename):
         if fields[0] == "nDigis":
             continue
 
-        # nDigis,iEta,iPhi,Depth,Mean TDC time[ns], TDC time RMS[ns], Uncertainty,Adjustment[ns],Adjustment[phase units]
-        n, ieta, iphi, depth, mean, rms, unc, adjt, adj = fields
+        # v1: nDigis,iEta,iPhi,Depth,Mean TDC time[ns], TDC time RMS[ns], Uncertainty,Adjustment[ns],Adjustment[phase units]
+        # v3: nDigis,iEta,iPhi,Depth,Mean TDC time[ns], TDC time RMS[ns], Uncertainty,Adjustment[ns],Adjustment[phase units],Net adjustment combined with first round
+        n, ieta, iphi, depth, mean, rms, unc, adjt, adj = fields[:9]
+
         rbx, rm, fi, ch = conversion[(int(ieta), int(iphi), int(depth))]
         qie = 6 * (fi - 1) + ch + 1
         out[(rbx, rm, qie)] = int(adj)
@@ -57,6 +59,8 @@ def adjustments(filename):
 
 
 def adjusted(oldPhase, adjustment, offset):
+    # QIE11_spec_2015run_30mar2016.pdf
+
     newPhase = oldPhase - adjustment + offset
 
     if newPhase < 0:
@@ -146,36 +150,36 @@ def main(opts):
 
 
 def options():
-    # from QIE11_spec_2015run_30mar2016.pdf
-
     parser = optparse.OptionParser(usage="usage: %prog [options] ")
-    parser.add_option("--old-xml",
-                      dest="oldXml",
-                      default="he_delay_2018_v2.xml",
-                      metavar="foo.xml",
-                      help="file containing old delay settings")
-    parser.add_option("--phase-delay",
-                      dest="phaseDelay",
-                      default="heller_HE_tuning_proposal_Apr24.csv",
-                      metavar="foo.csv",
-                      help="file specifying time adjustments")
-    parser.add_option("--offset",
-                      dest="offset",
-                      default=-64,
-                      type="int",
-                      help="add this offset to all settings")
     parser.add_option("--tag",
                       dest="tag",
                       default="phaseTuning_HE",
                       help="tag (default is phaseTuning_HE_DATE_VERSION)")
-    parser.add_option("--version",
-                      dest="version",
-                      default=2,
+    parser.add_option("--iteration",
+                      dest="iteration",
+                      default=0,
                       type="int",
-                      help="version number")
+                      metavar="N",
+                      help="iteration number")
     opts, args = parser.parse_args()
+    if not opts.iteration:
+        parser.print_help()
+        sys.exit("\n\nPlease specify an iteration number.")
     return opts
 
 
 if __name__ == "__main__":
-    main(options())
+    opts = options()
+
+    if opts.iteration == 1:
+        opts.offset = -64
+        opts.oldXml = "he_delay_2018_v2.xml"
+        opts.phaseDelay = "heller_HE_tuning_proposal_Apr24.csv"
+        opts.version = 2
+    if opts.iteration == 2:
+        opts.offset = 0
+        opts.oldXml = "phaseTuning_HE_2018-04-25_v2.xml"
+        opts.phaseDelay = "HE_phase_adjustments_round3.csv"
+        opts.version = 1
+
+    main(opts)
