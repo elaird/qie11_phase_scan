@@ -162,29 +162,29 @@ def options():
                       metavar="N",
                       help="iteration number")
     opts, args = parser.parse_args()
-    if not opts.iteration:
-        parser.print_help()
-        sys.exit("\n\nPlease specify an iteration number.")
-    return opts
+    return opts, parser
 
 
 if __name__ == "__main__":
-    opts = options()
+    opts, parser = options()
 
     if opts.iteration == 10:
         opts.offset = -64
         opts.oldXml = "he_delay_2018_v2.xml"
         opts.phaseDelay = "heller_HE_tuning_proposal_Apr24.csv"
         opts.version = 2
-    if opts.iteration == 20:
+    elif opts.iteration == 20:
         opts.offset = 0
         opts.oldXml = "phaseTuning_HE_2018-04-25_v2.xml"
         opts.phaseDelay = "HE_phase_adjustments_round3.csv"
         opts.version = 1
-    if opts.iteration == 21:
+    elif opts.iteration == 21:
         opts.offset = 0
         opts.oldXml = "phaseTuning_HE_2018-04-25_v2.xml"
         opts.phaseDelay = "HE_phase_adjustments_round3_HEP9fix.csv"
         opts.version = 2
+    else:
+        parser.print_help()
+        sys.exit("\n\nPlease specify a known iteration number, e.g. --iteration=21")
 
     main(opts)
