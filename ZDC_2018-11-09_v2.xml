@@ -1,0 +1,110 @@
+<CFGBrickSet>
+  <CFGBrick>
+    <Parameter name="INFOTYPE" type="string">DELAY</Parameter>
+    <Parameter name="CREATIONSTAMP" type="string">2018-11-09</Parameter>
+    <Parameter name="CREATIONTAG" type="string">ZDC_2018-11-09_v2</Parameter>
+    <Parameter name="RBX" type="string">ZDCM</Parameter>
+    <Data card="3" elements="1" encoding="dec" qie="1">17</Data>
+    <Data card="3" elements="1" encoding="dec" qie="2">4</Data>
+    <Data card="3" elements="1" encoding="dec" qie="3">15</Data>
+    <Data card="3" elements="1" encoding="dec" qie="4">24</Data>
+    <Data card="3" elements="1" encoding="dec" qie="5">17</Data>
+    <Data card="3" elements="1" encoding="dec" qie="6">4</Data>
+    <Data card="3" elements="1" encoding="dec" qie="7">14</Data>
+    <Data card="3" elements="1" encoding="dec" qie="8">28</Data>
+    <Data card="3" elements="1" encoding="dec" qie="9">0</Data>
+    <Data card="3" elements="1" encoding="dec" qie="10">20</Data>
+    <Data card="3" elements="1" encoding="dec" qie="11">23</Data>
+    <Data card="3" elements="1" encoding="dec" qie="12">14</Data>
+    <Data card="3" elements="1" encoding="dec" qie="13">0</Data>
+    <Data card="3" elements="1" encoding="dec" qie="14">15</Data>
+    <Data card="3" elements="1" encoding="dec" qie="15">20</Data>
+    <Data card="3" elements="1" encoding="dec" qie="16">8</Data>
+    <Data card="3" elements="1" encoding="dec" qie="17">0</Data>
+    <Data card="3" elements="1" encoding="dec" qie="18">0</Data>
+    <Data card="3" elements="1" encoding="dec" qie="19">0</Data>
+    <Data card="3" elements="1" encoding="dec" qie="20">0</Data>
+    <Data card="3" elements="1" encoding="dec" qie="21">0</Data>
+    <Data card="3" elements="1" encoding="dec" qie="22">0</Data>
+    <Data card="3" elements="1" encoding="dec" qie="23">0</Data>
+    <Data card="3" elements="1" encoding="dec" qie="24">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="1">20</Data>
+    <Data card="5" elements="1" encoding="dec" qie="2">16</Data>
+    <Data card="5" elements="1" encoding="dec" qie="3">16</Data>
+    <Data card="5" elements="1" encoding="dec" qie="4">17</Data>
+    <Data card="5" elements="1" encoding="dec" qie="5">16</Data>
+    <Data card="5" elements="1" encoding="dec" qie="6">24</Data>
+    <Data card="5" elements="1" encoding="dec" qie="7">44</Data>
+    <Data card="5" elements="1" encoding="dec" qie="8">40</Data>
+    <Data card="5" elements="1" encoding="dec" qie="9">64</Data>
+    <Data card="5" elements="1" encoding="dec" qie="10">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="11">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="12">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="13">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="14">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="15">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="16">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="17">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="18">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="19">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="20">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="21">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="22">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="23">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="24">0</Data>
+  </CFGBrick>
+  <CFGBrick>
+    <Parameter name="INFOTYPE" type="string">DELAY</Parameter>
+    <Parameter name="CREATIONSTAMP" type="string">2018-11-09</Parameter>
+    <Parameter name="CREATIONTAG" type="string">ZDC_2018-11-09_v2</Parameter>
+    <Parameter name="RBX" type="string">ZDCP</Parameter>
+    <Data card="3" elements="1" encoding="dec" qie="1">37</Data>
+    <Data card="3" elements="1" encoding="dec" qie="2">19</Data>
+    <Data card="3" elements="1" encoding="dec" qie="3">29</Data>
+    <Data card="3" elements="1" encoding="dec" qie="4">28</Data>
+    <Data card="3" elements="1" encoding="dec" qie="5">35</Data>
+    <Data card="3" elements="1" encoding="dec" qie="6">31</Data>
+    <Data card="3" elements="1" encoding="dec" qie="7">24</Data>
+    <Data card="3" elements="1" encoding="dec" qie="8">31</Data>
+    <Data card="3" elements="1" encoding="dec" qie="9">36</Data>
+    <Data card="3" elements="1" encoding="dec" qie="10">31</Data>
+    <Data card="3" elements="1" encoding="dec" qie="11">30</Data>
+    <Data card="3" elements="1" encoding="dec" qie="12">32</Data>
+    <Data card="3" elements="1" encoding="dec" qie="13">25</Data>
+    <Data card="3" elements="1" encoding="dec" qie="14">22</Data>
+    <Data card="3" elements="1" encoding="dec" qie="15">24</Data>
+    <Data card="3" elements="1" encoding="dec" qie="16">36</Data>
+    <Data card="3" elements="1" encoding="dec" qie="17">0</Data>
+    <Data card="3" elements="1" encoding="dec" qie="18">0</Data>
+    <Data card="3" elements="1" encoding="dec" qie="19">0</Data>
+    <Data card="3" elements="1" encoding="dec" qie="20">0</Data>
+    <Data card="3" elements="1" encoding="dec" qie="21">0</Data>
+    <Data card="3" elements="1" encoding="dec" qie="22">0</Data>
+    <Data card="3" elements="1" encoding="dec" qie="23">0</Data>
+    <Data card="3" elements="1" encoding="dec" qie="24">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="1">41</Data>
+    <Data card="5" elements="1" encoding="dec" qie="2">49</Data>
+    <Data card="5" elements="1" encoding="dec" qie="3">46</Data>
+    <Data card="5" elements="1" encoding="dec" qie="4">47</Data>
+    <Data card="5" elements="1" encoding="dec" qie="5">44</Data>
+    <Data card="5" elements="1" encoding="dec" qie="6">48</Data>
+    <Data card="5" elements="1" encoding="dec" qie="7">64</Data>
+    <Data card="5" elements="1" encoding="dec" qie="8">64</Data>
+    <Data card="5" elements="1" encoding="dec" qie="9">64</Data>
+    <Data card="5" elements="1" encoding="dec" qie="10">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="11">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="12">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="13">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="14">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="15">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="16">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="17">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="18">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="19">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="20">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="21">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="22">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="23">0</Data>
+    <Data card="5" elements="1" encoding="dec" qie="24">0</Data>
+  </CFGBrick>
+</CFGBrickSet>
