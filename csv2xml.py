@@ -58,6 +58,25 @@ def adjustments(filename):
     return out
 
 
+def zdc_adjustments(filename):
+    out = {}
+    f = open(filename)
+    for line in f:
+        fields = line.strip().split()
+        if not fields:
+            continue
+        if fields[0].startswith("#"):
+            continue
+
+        rbx = fields[0][:4]
+        rm = int(fields[1])
+        qie = int(fields[2])
+        adj = int(-2.0 * float(fields[7]))
+        out[(rbx, rm, qie)] = adj
+    f.close()
+    return out
+
+
 def adjusted(oldPhase, adjustment, offset):
     # QIE11_spec_2015run_30mar2016.pdf
 
@@ -79,7 +98,7 @@ def adjusted(oldPhase, adjustment, offset):
     return newPhase
 
 
-def walk(tree, deltas, special, date, tag, bulk=None, settings=None, offset=None):
+def walk(tree, deltas, special, date, tag, bulk=None, settings=None, offset=None, rmKey="rm"):
     for block in tree.getroot():
         rbx = ''
         for value in block:
@@ -92,7 +111,7 @@ def walk(tree, deltas, special, date, tag, bulk=None, settings=None, offset=None
                     value.text = tag
 
             if value.tag == "Data":
-                rm = int(value.attrib["rm"])
+                rm = int(value.attrib[rmKey])
                 qie = int(value.attrib["qie"])
                 special_channel = (rm, qie) in special
                 adjustment = deltas.get((rbx, rm, qie))
@@ -136,16 +155,23 @@ def special_channels():
 
 
 def main(opts):
-    deltas = adjustments(opts.phaseDelay)
-    special = special_channels()
+    if str(opts.iteration).startswith("9"):
+        deltas = zdc_adjustments(opts.phaseDelay)
+        special = []
+        rmKey = "card"
+    else:
+        deltas = adjustments(opts.phaseDelay)
+        special = special_channels()
+        rmKey = "rm"
+
     date = datetime.date.today().strftime("%Y-%m-%d")
     tag = "%s_%s_v%d" % (opts.tag, date, opts.version)
 
     tree = ElementTree.parse(opts.oldXml)
     bulk_settings = collections.defaultdict(list)
-    walk(tree, deltas, special, date, tag, bulk=True, settings=bulk_settings, offset=opts.offset)
+    walk(tree, deltas, special, date, tag, bulk=True, settings=bulk_settings, offset=opts.offset, rmKey=rmKey)
     medians = report_medians(bulk_settings)
-    walk(tree, deltas, special, date, tag, bulk=False, settings=medians)
+    walk(tree, deltas, special, date, tag, bulk=False, settings=medians, rmKey=rmKey)
     tree.write("%s.xml" % tag)
 
 
@@ -183,6 +209,11 @@ if __name__ == "__main__":
         opts.oldXml = "phaseTuning_HE_2018-04-25_v2.xml"
         opts.phaseDelay = "HE_phase_adjustments_round3_HEP9fix.csv"
         opts.version = 2
+    elif opts.iteration == 90:
+        opts.offset = 0
+        opts.oldXml = "ZDC0.xml"
+        opts.phaseDelay = "zdc2018_v1.csv"
+        opts.version = 1
     else:
         parser.print_help()
         sys.exit("\n\nPlease specify a known iteration number, e.g. --iteration=21")
