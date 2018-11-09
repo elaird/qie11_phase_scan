@@ -70,7 +70,7 @@ def zdc_adjustments(filename):
 
         rbx = fields[0][:4]
         rm = int(fields[1])
-        qie = int(fields[2])
+        qie = 1 + int(fields[2])
         adj = int(-2.0 * float(fields[7]))
         out[(rbx, rm, qie)] = adj
     f.close()
@@ -213,7 +213,7 @@ if __name__ == "__main__":
         opts.offset = 0
         opts.oldXml = "ZDC0.xml"
         opts.phaseDelay = "zdc2018_v1.csv"
-        opts.version = 1
+        opts.version = 2
     else:
         parser.print_help()
         sys.exit("\n\nPlease specify a known iteration number, e.g. --iteration=21")
