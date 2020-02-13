@@ -5,14 +5,7 @@ from re import search, escape
 
 # Author: J. Mariano, 2017 #
 
-################################################
-############### SERVER SETTINGS ################
-################################################
-ngfec = "/nfshome0/hcalpro/ngFEC/ngFEC.exe"
-host = "hcalngccm02"
-port = 64000
-
-def sendngFECcommands(cmds=['quit']):
+def sendngFECcommands(ngfec, host, port, cmds=['quit']):
         # HARDCODE FOR HE PHASE SCAN
         script = False
         raw = False
@@ -116,5 +109,11 @@ def logResponse(responses,logfile):
                 logfile.write(logline + "\n")
 
 
-def sendAndLog(cmds, logfile):
-        logResponse(sendngFECcommands(cmds), logfile)
+def sendAndLog(ngfec, host, port, cmds, logfile):
+        logResponse(sendngFECcommands(ngfec, host, port, cmds), logfile)
+
+
+def onlyLog(ngfec, host, port, cmds, logfile):
+        logfile.write("The following commands would be sent via %s to %s:%d otherwise:\n" % (ngfec, host, port))
+        for cmd in cmds:
+            logfile.write(cmd + "\n")
