@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 # Original author: J. Mariano #
 # Refactored Oct. 2017 #
@@ -33,21 +33,21 @@ def main():
     while nCycles:
         for setting in module.settings():
             logfile = open("phasescan_log.txt", "a")
-            print "Writing value %d to uMNIO." % transition_code
+            print("Writing value %d to uMNIO." % transition_code)
             if not test_mode:
                 umnio.write_setting(transition_code)
 
-            print "Applying setting: %d" % setting
+            print("Applying setting: %d" % setting)
             applySetting(module, setting, test_mode=test_mode, logfile=logfile)
 
-            print "Writing value %d to uMNIO." % setting
+            print("Writing value %d to uMNIO." % setting)
             if not test_mode:
                 umnio.write_setting(setting)
 
-            print "...sleeping"
+            print("...sleeping")
             time.sleep(seconds_per_setting)
 
-            print "####################################################################################"
+            print("####################################################################################")
 
             logfile.close()
         nCycles -= 1
@@ -59,8 +59,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
 
-    print
-    print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    print "Settings are still at the final scan value."
-    print "Configure a run to restore to default values."
-    print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print("Settings are still at the final scan value.")
+    print("Configure a run to restore to default values.")
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
