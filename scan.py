@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 
-# Original author: J. Mariano #
-# Refactored Oct. 2017 #
-
-import time
+import argparse, time
 import fec_jm, umnio
 import qie11_phases, tdc_thresholds
 
@@ -22,44 +19,52 @@ def applySetting(module, setting, test_mode=None, logfile=None):
     logfile.write("############################################\n")
 
 
-def main():
-    transition_code = 999  # written to uMNIO during changes of setting
-    seconds_per_setting = 300
-    nCycles = 20  # number of scan cycles (a negative number will cause permanent looping)
-    test_mode = True  # if test_mode == True, then there are no actual writes to hardware
-    module = qie11_phases
-    # module = tdc_thresholds
+def parsed_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--code", help="code written to uMNio during change of setting", metavar="N", type=int, default=999)
+    parser.add_argument("--cycles", help="number of cycles (negative will permanently loop)", type=int, default=20)
+    parser.add_argument("--logfile", help="log file to append to", default="scan_log.txt")
+    parser.add_argument("--seconds", help="number of seconds to sleep per setting", type=int, default=300)
+    parser.add_argument("--tdc-threshold", help="Scan TDC threshold rather than phase", action='store_true', default=False)
+    parser.add_argument("--test-mode", help="Don't interact with hardware", action='store_true', default=False)
+    return parser.parse_args()
 
-    while nCycles:
+
+def main(args):
+    module = tdc_thresholds if args.tdc_threshold else qie11_phases
+
+    while args.cycles:
         for setting in module.settings():
-            logfile = open("phasescan_log.txt", "a")
-            print("Writing value %d to uMNIO." % transition_code)
-            if not test_mode:
-                umnio.write_setting(transition_code)
+            logfile = open(args.logfile, "a")
+            print("Writing value %d to uMNIO." % args.code)
+            if not args.test_mode:
+                umnio.write_setting(args.code)
 
             print("Applying setting: %d" % setting)
-            applySetting(module, setting, test_mode=test_mode, logfile=logfile)
+            applySetting(module, setting, test_mode=args.test_mode, logfile=logfile)
 
             print("Writing value %d to uMNIO." % setting)
-            if not test_mode:
+            if not args.test_mode:
                 umnio.write_setting(setting)
 
             print("...sleeping")
-            time.sleep(seconds_per_setting)
+            time.sleep(args.seconds)
 
             print("####################################################################################")
 
             logfile.close()
-        nCycles -= 1
+        args.cycles -= 1
 
 
 if __name__ == "__main__":
+    args = parsed_args()
     try:
-        main()
+        main(args)
     except KeyboardInterrupt:
         pass
 
-    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    print("Settings are still at the final scan value.")
-    print("Configure a run to restore to default values.")
-    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    if not args.test_mode:
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print("Settings are still at the final scan value.")
+        print("Configure a run to restore to default values.")
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
