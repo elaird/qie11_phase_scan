@@ -4,12 +4,13 @@
 # Refactored Oct. 2017 #
 
 import time
-import fec_jm, qie11_phases, umnio
+import fec_jm, umnio
+import qie11_phases, tdc_thresholds
 
 
-def setPhase(phase, test_mode=None, logfile=None):
-    cmds1 = qie11_phases.commands(phase, put=True)
-    cmds2 = qie11_phases.commands(phase, put=False)
+def applySetting(module, setting, test_mode=None, logfile=None):
+    cmds1 = module.commands(setting, put=True)
+    cmds2 = module.commands(setting, put=False)
 
     if test_mode:
         logfile.write("Test mode enabled. The following commands would be sent to the ngccm server otherwise:\n")
@@ -22,27 +23,29 @@ def setPhase(phase, test_mode=None, logfile=None):
 
 
 def main():
-    transition_code = 999  # written to uMNIO during phase changes
-    seconds_per_phase = 300
+    transition_code = 999  # written to uMNIO during changes of setting
+    seconds_per_setting = 300
     nCycles = 20  # number of scan cycles (a negative number will cause permanent looping)
-    test_mode = False  # if test_mode == True, then there are no actual writes to hardware
+    test_mode = True  # if test_mode == True, then there are no actual writes to hardware
+    module = qie11_phases
+    # module = tdc_thresholds
 
     while nCycles:
-        for phase in qie11_phases.settings():
+        for setting in module.settings():
             logfile = open("phasescan_log.txt", "a")
-            print "Writing phase %d to uMNIO." % transition_code
+            print "Writing value %d to uMNIO." % transition_code
             if not test_mode:
                 umnio.write_setting(transition_code)
 
-            print "Setting phase: %d" % phase
-            setPhase(phase, test_mode=test_mode, logfile=logfile)
+            print "Applying setting: %d" % setting
+            applySetting(module, setting, test_mode=test_mode, logfile=logfile)
 
-            print "Writing phase %d to uMNIO." % phase
+            print "Writing value %d to uMNIO." % setting
             if not test_mode:
-                umnio.write_setting(phase)
+                umnio.write_setting(setting)
 
             print "...sleeping"
-            time.sleep(seconds_per_phase)
+            time.sleep(seconds_per_setting)
 
             print "####################################################################################"
 
@@ -58,6 +61,6 @@ if __name__ == "__main__":
 
     print
     print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    print "Phases are still in the final scan value."
+    print "Settings are still at the final scan value."
     print "Configure a run to restore to default values."
     print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
