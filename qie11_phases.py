@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 
 def times(delta=7, tMax=-1, t0=-12, period=25):
@@ -27,18 +27,18 @@ def setting_wrt_64(time):
 def settings(nCycles=1, debug=False):
     if debug:
         header = "step   ns  setting"
-        print header
-        print "-" * len(header)
+        print(header)
+        print("-" * len(header))
 
     out = []
     for i, t in enumerate(nCycles * times()):
         s = setting_wrt_64(t)
         out.append(s)
         if debug:
-            print "  %2d  %3d   %3d" % (i, t, s)
+            print("  %2d  %3d   %3d" % (i, t, s))
 
     if debug:
-        print "-" * len(header)
+        print("-" * len(header))
     return out
 
 
@@ -60,11 +60,11 @@ def test():
     assert setting_wrt_64(-1) == 48
 
     t = times()
-    assert sorted(t) == range(min(t), 1 + max(t))
+    assert sorted(t) == list(range(min(t), 1 + max(t)))
 
     for s in settings(debug=True):
-        print commands(s, put=True)
-        print commands(s, put=False)
+        print(commands(s, put=True))
+        print(commands(s, put=False))
 
     
 if __name__ == "__main__":
